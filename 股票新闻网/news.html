@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>市场消息总览 · 环球市场雷达</title>
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon-32.png" />
+  <link rel="apple-touch-icon" href="favicon-180.png" />
+  <style>
+    :root { --ink:#172c39; --muted:#71808b; --navy:#0d2836; --teal:#0f7a75; --line:#dce6e9; --up:#d94f4f; --down:#14936c; --flat:#6e7c85; }
+    * { box-sizing:border-box; }
+    button { font:inherit; cursor:pointer; }
+    body { margin:0; min-width:1080px; font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; color:var(--ink);
+           background:radial-gradient(circle at 7% 3%,#cfece8 0,transparent 25%),radial-gradient(circle at 94% 0,#dbe7fc 0,transparent 27%),linear-gradient(135deg,#eaf1f2,#f8fafb 48%,#e8effb); }
+    .topbar { height:66px; display:flex; align-items:center; justify-content:space-between; padding:0 42px; background:#ffffffa6; border-bottom:1px solid #ffffffc4; box-shadow:0 4px 20px #54748217; backdrop-filter:blur(20px) saturate(155%); -webkit-backdrop-filter:blur(20px) saturate(155%); position:sticky; top:0; z-index:7; }
+    .brand { display:flex; align-items:center; text-decoration:none; }
+    .brand-logo { display:block; width:205px; height:48px; object-fit:contain; }
+    .nav { display:flex; gap:28px; align-self:stretch; align-items:center; font-size:14px; }
+    .nav a { height:66px; display:flex; align-items:center; color:#72838e; text-decoration:none; border-bottom:3px solid transparent; transition:.18s; }
+    .nav a:hover, .nav a.active { color:var(--navy); border-bottom-color:var(--teal); }
+    .clock { font-family:Consolas,monospace; color:#647883; font-size:13px; }
+    main { max-width:1380px; margin:0 auto; padding:22px 42px 70px; }
+    .page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:14px; }
+    h1 { font-size:22px; line-height:1.2; margin:0; }
+    .subtitle { margin:7px 0 0; color:var(--muted); font-size:12px; }
+    .stats { display:flex; gap:9px; }
+    .stat { padding:7px 13px; border-radius:9px; background:#ffffffb4; border:1px solid #ffffffd0; font-size:12px; color:#66777f; }
+    .stat b { font-family:Consolas,monospace; font-size:15px; margin-left:5px; }
+    .stat.up b { color:var(--up); } .stat.down b { color:var(--down); } .stat.flat b { color:var(--flat); }
+
+    .bar { position:sticky; top:66px; z-index:6; display:flex; flex-wrap:wrap; align-items:center; gap:9px 22px; padding:11px 15px; margin-bottom:14px;
+           border:1px solid #ffffffd0; border-radius:13px; background:#ffffffc6; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 6px 18px #33586b10; }
+    .group { display:flex; align-items:center; gap:7px; }
+    .group > .label { color:var(--muted); font-size:12px; }
+    .chip { border:1px solid #cfdde0; background:#fff; color:#5a6b75; border-radius:20px; padding:4px 12px; font-size:12px; transition:.15s; }
+    .chip:hover { border-color:#9fd4cd; color:var(--teal); }
+    .chip.active { background:var(--teal); border-color:var(--teal); color:#fff; font-weight:700; }
+    .chip.active.up { background:var(--up); border-color:var(--up); }
+    .chip.active.down { background:var(--down); border-color:var(--down); }
+    .chip.active.flat { background:var(--flat); border-color:var(--flat); }
+    .search { flex:1; min-width:170px; max-width:280px; margin-left:auto; padding:6px 12px; border:1px solid #cfdde0; border-radius:20px; background:#fff; font:inherit; font-size:12px; outline:0; }
+    .search:focus { border-color:#5bb9ae; box-shadow:0 0 0 3px #55b8aa24; }
+
+    .feed { display:flex; flex-direction:column; gap:10px; }
+    .item { display:grid; grid-template-columns:116px 1fr; gap:16px; padding:14px 17px; border:1px solid #ffffffd0; border-radius:14px;
+            background:#ffffffb8; box-shadow:0 6px 18px #33586b0e; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); transition:background .18s, box-shadow .18s; }
+    .item:hover { background:#ffffffe0; box-shadow:0 10px 24px #33586b16; }
+    .side { display:flex; flex-direction:column; gap:7px; align-items:flex-start; }
+    .imp { font-size:11px; font-weight:700; padding:3px 10px; border-radius:5px; color:#fff; letter-spacing:.5px; }
+    .imp.up { background:var(--up); } .imp.down { background:var(--down); } .imp.flat { background:var(--flat); }
+    .t { font-family:Consolas,monospace; font-size:11px; color:#93a2aa; }
+    .c { font-size:11px; color:var(--teal); background:#e2f2ef; padding:2px 8px; border-radius:4px; }
+    .body h3 { margin:0 0 7px; font-size:15px; line-height:1.5; }
+    .body h3 a { color:var(--navy); text-decoration:none; }
+    .body h3 a:hover { color:var(--teal); text-decoration:underline; }
+    .body p { margin:0 0 9px; font-size:13px; line-height:1.85; color:#4d606a; }
+    .foot { display:flex; flex-wrap:wrap; gap:7px 18px; align-items:center; font-size:11px; color:#8a98a0; }
+    .assets { display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
+    .assets em { font-style:normal; color:#93a2aa; }
+    .assets i { font-style:normal; padding:2px 8px; border-radius:4px; background:#eef4f6; color:#5c707b; }
+    .src a { color:#7c8f99; text-decoration:none; border-bottom:1px dotted #b9c8cf; }
+    .src a:hover { color:var(--teal); }
+    .empty { padding:56px; text-align:center; color:var(--muted); font-size:13px; }
+    .note { margin:18px 0 0; padding:12px 15px; border-radius:10px; background:#e8f4f2; color:#53707a; font-size:12px; line-height:1.7; }
+    @media (max-width:1200px) { .item { grid-template-columns:100px 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="环球市场雷达首页"><img class="brand-logo" src="brand-logo.svg" alt="环球市场雷达"></a>
+    <nav class="nav"><a href="index.html#markets">市场概览</a><a class="active" href="news.html">新闻中心</a></nav>
+    <div class="clock">公开报道检索整理 · 非投资建议</div>
+  </header>
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h1>市场消息总览</h1>
+        <p class="subtitle">全网检索公开报道整理 · 按时间倒序 · 共 <b id="total">0</b> 条 · 点击标题可跳转原文</p>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <div class="bar">
+      <div class="group"><span class="label">类别</span><span id="catChips"></span></div>
+      <div class="group"><span class="label">影响</span><span id="impChips"></span></div>
+      <input class="search" id="search" type="search" placeholder="搜索标题、标的、摘要…" />
+    </div>
+
+    <div class="feed" id="feed"></div>
+    <p class="note">本页内容为对公开报道的检索与整理，标题与摘要仅作信息聚合，不构成任何投资建议。行情随时变化，请以原始报道和官方数据为准。</p>
+  </main>
+
+  <script>
+    const NEWS = [
+      { d:'2026-10-10 09:40', cat:'政策', imp:'利好', title:'中共中央、国务院印发《关于发展新质生产力的意见》',
+        sum:'顶层设计正式出台，明确“怎么干”，同时强调确保不走偏、不冒进、不泡沫化。文件给出科技自立自强与产业升级的中长期框架，是A股科技成长主线的政策底座。',
+        assets:['A股','科技成长','新质生产力'], src:'新华社 / 中国政府网', url:'https://www.gov.cn/yaowen/liebiao/202610/content_7082824.htm' },
+
+      { d:'2026-10-10 09:00', cat:'公司', imp:'利好', title:'机构研判券商前三季度业绩有望继续增长，头部券商配置价值受重视',
+        sum:'交投活跃度提升叠加自营改善，券商前三季度业绩预期向好；机构认为头部券商的配置价值更突出。',
+        assets:['券商','非银金融'], src:'东方财富', url:'http://stock.eastmoney.com/news/1405,202610103891645668.html' },
+
+      { d:'2026-10-10 08:30', cat:'商品', imp:'中性', title:'美放松对俄柴油贸易制裁，特朗普称俄将对美供应大量柴油',
+        sum:'美俄展开能源合作，特朗普称与普京达成协议，俄罗斯将向美国及全球市场供应大量柴油。短期压制柴油裂解价差与炼化利润，但全球能源博弈格局仍难破局。',
+        assets:['原油','柴油','炼化'], src:'新华社 / 国际在线', url:'https://www.news.cn/world/20261010/3362f42150de4533ae12eac0272e85c0/c.html' },
+
+      { d:'2026-10-10 08:05', cat:'公司', imp:'利好', title:'国泰海通被险资巨头举牌，券业配置价值再受关注',
+        sum:'险资举牌头部券商，是长期资金入市与“耐心资本”定调后的标志性动作，对非银板块情绪形成支撑。',
+        assets:['券商','非银金融','保险资金'], src:'新浪财经', url:'https://finance.sina.com.cn/wm/2026-10-10/doc-iniutyzf7443710.shtml' },
+
+      { d:'2026-10-10 07:50', cat:'市场', imp:'利好', title:'美股三大指数集体收涨，纳斯达克中国金龙指数涨超2%',
+        sum:'美股收盘三大指数集体收涨，中概股走强，纳斯达克中国金龙指数涨超2%。债市风暴后风险偏好出现阶段性修复。',
+        assets:['纳指','中概股','港股'], src:'东方财富', url:'https://stock.eastmoney.com/news/11784,202610103891632088.html' },
+
+      { d:'2026-10-10 07:30', cat:'市场', imp:'利好', title:'热门中概股深夜大涨',
+        sum:'中概股在美股交易时段集体走强，与金龙指数涨超2%互相印证，港股与中概科技情绪同步修复。',
+        assets:['中概股','恒生科技'], src:'大河财立方', url:'https://app.dahecube.com/nweb/news/20261010/289234nf60db54e849.htm' },
+
+      { d:'2026-10-10 07:20', cat:'商品', imp:'利空', title:'智利大型铜矿爆发罢工，全球铜供应再添变数',
+        sum:'罢工落地，铜矿供给扰动升温。但机构同时提示铜价支撑正在减弱，需要区分供给扰动的短期脉冲与需求端的真实走弱。',
+        assets:['LME铜','有色金属','必和必拓'], src:'中国能源新闻网 / SMM', url:'https://www.cnenergynews.cn/article/4TYHxZhjJih' },
+
+      { d:'2026-10-10 06:40', cat:'公司', imp:'利空', title:'固态电池概念火热，上海洗霸公告紧急“降温”',
+        sum:'公司明确表示固态电池相关业务暂未形成长期稳定的规模化收入，提示概念炒作与产业化落地之间存在明显时间差。',
+        assets:['固态电池','新能源'], src:'证券时报', url:'https://stcn.com/article/detail/4208435.html' },
+
+      { d:'2026-10-10 06:10', cat:'政策', imp:'中性', title:'7部门发文培育品质电商，纠治“全网最低价”等无序竞争',
+        sum:'监管出手规范电商价格竞争，对平台补贴战与低价内卷形成约束，相对利好品牌方与合规平台。',
+        assets:['电商','互联网平台'], src:'东方财富', url:'http://finance.eastmoney.com/news/1345,202610103891853240.html' },
+
+      { d:'2026-10-10 00:30', cat:'商品', imp:'利好', title:'金价节后反弹至4193美元，A股黄金板块集体走强',
+        sum:'黄金在债市风暴后反弹至4193美元/盎司，A股黄金板块同步走强。机构认为黄金的结构性驱动并未消失。',
+        assets:['COMEX黄金','黄金股'], src:'财联社', url:'https://api3.cls.cn/share/article/2500519' },
+
+      { d:'2026-10-09 23:50', cat:'央行', imp:'利空', title:'美联储理事沃勒放鹰：仍需进一步加息，节奏存在“灵活性”',
+        sum:'沃勒明确表态仍需进一步加息。其后高盛上调加息预期，认为可能再加两次、12月加息25个基点。这是当前压制全球风险资产估值的核心变量。',
+        assets:['美债10Y','美元指数','成长股'], src:'中国金融信息网 / 网易财经', url:'https://www.cnfin.com/hs-lb/detail/20261009/4478717_1.html' },
+
+      { d:'2026-10-09 23:10', cat:'商品', imp:'中性', title:'机构：黄金结构性驱动未消失，后续关键看油价、通胀与美债收益率',
+        sum:'实际利率、通胀预期与美元三条线共同决定黄金中期方向；单一交易日的大幅波动不宜直接当作趋势判断依据。',
+        assets:['黄金','实际利率','美元'], src:'机构观点', url:'https://news.platform.elebank.com/flash/1000651728/' },
+
+      { d:'2026-10-09 15:00', cat:'区域市场', imp:'中性', title:'1.92万亿放量“深V反转”，三季报窗口期资金开始切换方向',
+        sum:'两市成交放大到1.92万亿元并走出深V反转，三季报窗口期资金开始向业绩确定性更高的方向布局。',
+        assets:['A股','业绩超预期'], src:'搜狐财经', url:'http://news.sohu.com/a/1085675049_122014422' },
+
+      { d:'2026-10-09 10:11', cat:'公司', imp:'利空', title:'OpenAI年化营收“接近500亿美元”，大幅低于市场流传的近700亿',
+        sum:'据《金融时报》，OpenAI向投资者披露的截至9月底年化营收远低于预期。AI“循环融资”链条（投资者→OpenAI→云厂商→芯片）的还款总源头被质疑，半导体、光通信、云服务商集体重挫：费城半导体指数跌约3.4%，英伟达跌超2.9%，甲骨文跌近5.5%，应用光电大跌超13%。',
+        assets:['英伟达','半导体','云计算','光通信'], src:'央视财经 / 东方财富', url:'https://fund.eastmoney.com/a/202610093891009056.html' },
+
+      { d:'2026-10-09 09:30', cat:'政策', imp:'利好', title:'证监会召开资本市场和金融形势专家座谈会，释放五大信号',
+        sum:'会议定调“稳市机制”与“耐心资本”，稳市从应急走向常态化。对市场风险偏好和中长期资金入市预期构成支撑。',
+        assets:['A股','券商','保险'], src:'中国证券报 / 商业时报', url:'http://jnzstatic.cs.com.cn/zzb/htmlInfo/134799.html' },
+
+      { d:'2026-10-09 08:15', cat:'区域市场', imp:'利好', title:'韩国存储双雄“巨额回购”，Kospi单日大涨近6%',
+        sum:'三星电子与SK海力士宣布大规模回购，叠加美债收益率担忧缓和，韩国综指暴涨近6%。存储成为全球科技股中少数的独立强势方向。',
+        assets:['Kospi','三星电子','SK海力士','存储'], src:'Yonhap 韩联社', url:'https://en.yna.co.kr/k-biz/view/AEN20260820006152320' },
+
+      { d:'2026-10-09 07:40', cat:'公司', imp:'利好', title:'DRAM迎超级成长周期，传南亚科计划涨价最高达20%',
+        sum:'存储涨价从HBM向通用DRAM扩散，南亚科计划涨价最高20%，强化存储行业景气上行的判断。',
+        assets:['DRAM','存储','半导体'], src:'东方财富', url:'https://finance.eastmoney.com/news/1354,202610073888845081.html' },
+
+      { d:'2026-10-08 22:30', cat:'债市', imp:'利空', title:'全球债市遭遇“世纪级”调整，美英法日同步承压',
+        sum:'长端利率飙升至数十年高位，高杠杆平仓放大了恐慌。债券风暴是当前所有风险资产定价的分母端压力，也是“收益率＋油价”双压逻辑的直接来源。',
+        assets:['美债10Y','全球股市','黄金'], src:'国际在线 / Yahoo财经', url:'https://news.cri.cn/2026-10-02/f94a6c37-4dae-619b-eb54-202dda55761d.html' },
+
+      { d:'2026-10-08 22:00', cat:'区域市场', imp:'中性', title:'美股异动：特斯拉涨近2%，三大指数齐涨',
+        sum:'美股开盘三大指数齐涨，特斯拉涨近2%，成长股在债市风暴后出现技术性反弹。',
+        assets:['特斯拉','纳指'], src:'亿牛网', url:'https://news.platform.elebank.com/flash/1000803032' },
+
+      { d:'2026-10-08 21:00', cat:'市场', imp:'中性', title:'美股芯片股盘前走高，费城半导体指数此前单日涨3%',
+        sum:'半导体在OpenAI消息冲击后走势反复，板块内部分化明显：存储强、算力链弱。',
+        assets:['费城半导体','芯片'], src:'第一财经 / 老虎证券', url:'https://www.yicai.com/news/102866317.html' },
+
+      { d:'2026-10-08 20:10', cat:'商品', imp:'利空', title:'中东局势紧张推升油价，白宫要求准备针对伊朗的潜在打击方案',
+        sum:'有报道称白宫已要求五角大楼准备针对伊朗的潜在打击方案，墨西哥湾又形成飓风“伊萨亚斯”，国际油价盘中飙升，加剧了市场对美联储需进一步加息以遏制通胀的担忧。',
+        assets:['WTI原油','布伦特原油','能源股'], src:'华尔街见闻', url:'https://wallstreetcn.com/livenews/3175861' },
+
+      { d:'2026-10-08 18:00', cat:'商品', imp:'中性', title:'特朗普紧急召集石油业巨头，商讨应对高油价与长期封锁伊朗',
+        sum:'面对高油价，特朗普召集油气高管开会商讨对策。供给端的政治博弈加剧，油价波动率预计维持高位。',
+        assets:['原油','油气开采'], src:'凤凰网 / 国研网', url:'https://news.ifeng.com/c/8skcORK3L0e' },
+
+      { d:'2026-10-08 16:20', cat:'央行', imp:'利空', title:'美联储9月会议纪要：多数官员认为年内或再加息',
+        sum:'纪要显示多数官员倾向年内进一步加息，与沃勒讲话相互呼应，市场对12月加息的定价继续抬升。',
+        assets:['美债','美元指数','黄金'], src:'中国网财经', url:'http://finance.china.com.cn/money/20261008/6325515.shtml' },
+
+      { d:'2026-10-08 15:00', cat:'区域市场', imp:'利好', title:'A股节后机构抄底，超430亿资金借道ETF进场',
+        sum:'节后超过430亿元资金借道ETF进场扫货，半导体、芯片被大幅加仓，显示机构在调整中逆向布局。',
+        assets:['A股','半导体','ETF'], src:'今日头条', url:'https://www.toutiao.com/article/7694871444919960098/' },
+
+      { d:'2026-10-08 11:00', cat:'公司', imp:'利好', title:'百事可乐Q3净营收及营业利润胜预期，股价涨超2%',
+        sum:'必需消费龙头业绩超预期。在利率高企、成长股承压的环境下，现金流稳定的防御型资产相对占优。',
+        assets:['百事','必需消费'], src:'金融界', url:'https://m.jrj.com.cn/madapter/24h/2026/10/08220758635426.shtml' },
+
+      { d:'2026-10-07 21:30', cat:'债市', imp:'中性', title:'债券风暴席卷欧美日，全球股市却逼近新高',
+        sum:'长端利率与股市同时走高，历史上这种组合往往以其中一方的剧烈调整收场。这个背离是当前最重要的观察点。',
+        assets:['美债','全球股市'], src:'hafoo 财经', url:'http://www.hafoo.com.hk/news/hans/notice/202610063888765821' },
+
+      { d:'2026-10-07 14:00', cat:'区域市场', imp:'中性', title:'长假期间港股缩量震荡，机构看好节后修复',
+        sum:'港股假期交投清淡，机构整体对节后修复偏乐观，但外资大行观点出现明显分歧（见下条）。',
+        assets:['恒生指数','港股'], src:'中国金融信息网', url:'https://www.cnfin.com/gs-lb/detail/20261007/4477764_1.html' },
+
+      { d:'2026-10-07 10:30', cat:'公司', imp:'中性', title:'台积电狂飙天价却有苦恼，外媒曝“甜蜜炸弹”成新考验',
+        sum:'台积电在AI需求推动下股价与产能双双走高，但外媒指出客户集中、资本开支与地缘风险等“甜蜜炸弹”正成为新的考验。',
+        assets:['台积电','晶圆代工'], src:'中时新闻网', url:'https://www.chinatimes.com/cn/realtimenews/20261006002479-260410?chdtv' },
+
+      { d:'2026-10-07 11:00', cat:'宏观', imp:'中性', title:'联合国贸发会议发布《2026年贸易与发展展望报告》',
+        sum:'报告给出全球贸易与增长的中期展望，是判断外需与出口链前景的背景参考。',
+        assets:['全球贸易','出口链'], src:'商务部 WTO 事务', url:'https://chinawto.mofcom.gov.cn/article/gjzk/202607/20260703635541.shtml' },
+
+      { d:'2026-10-06 16:40', cat:'宏观', imp:'中性', title:'IMF：中东冲突叠加高利率环境，全球金融稳定风险上升',
+        sum:'IMF提示地缘冲突与高利率共振之下的金融稳定风险，是评估尾部风险时的重要参考。',
+        assets:['全球风险资产','新兴市场'], src:'光明网', url:'https://m.gmw.cn/2026-04/15/content_1304418479.htm' },
+
+      { d:'2026-10-06 15:00', cat:'政策', imp:'利好', title:'商务部美大司负责人解读中美经贸磋商初步成果',
+        sum:'中美经贸磋商取得初步成果，对出口链与跨境电商构成边际利好，但仍需观察后续落实进度。',
+        assets:['出口链','跨境电商'], src:'商务部 / 中国政府网', url:'https://admin.cacs.mofcom.gov.cn/article/gnwjmdt/sb/zm/202605/188111.html' },
+
+      { d:'2026-10-06 09:00', cat:'债市', imp:'利空', title:'危机的前奏？全球债市长端利率飙至数十年高，高杠杆平仓放大恐慌',
+        sum:'全球债市拉响警报，长端利率飙升叠加高杠杆平仓，恐慌情绪向股票与商品扩散。',
+        assets:['美债','日债','全球股市'], src:'Yahoo 财经香港', url:'https://hk.finance.yahoo.com/' },
+
+      { d:'2026-10-05 12:51', cat:'区域市场', imp:'利空', title:'渣打降港股看法至“核心配置”，12个月目标调低至26000–27000点',
+        sum:'外资大行下调港股配置评级与目标位，与“节后修复”的乐观预期形成对冲，说明港股分歧仍然很大。',
+        assets:['恒生指数','港股'], src:'明报财经', url:'https://finance.mingpao.com/fin/instantf/20261005/1791176345626/' },
+
+      { d:'2026-09-18 12:00', cat:'央行', imp:'利空', title:'日本央行加息25个基点至1.25%，创31年来最高水平',
+        sum:'日本货币政策正常化继续推进。日元套息交易的平仓压力是全球流动性的关键变量，也是全球长端利率上行的重要推手之一。',
+        assets:['日元','日经225','套息交易'], src:'中国金融信息网', url:'https://m.cnfin.com/hs-lb//zixun/20260918/4471663_1.html' },
+
+      { d:'2026-09-11 09:00', cat:'央行', imp:'利空', title:'欧洲央行再次加息25个基点，不锁定固定加息路径',
+        sum:'欧央行9月加息25bp并明确不锁定固定路径。欧元区利率维持高位，对欧洲估值与银行股形成双向影响。',
+        assets:['欧元','欧洲斯托克50','银行股'], src:'经济网 / 中国金融信息网', url:'https://www.ceweekly.cn/finance/macro/2026/0911/500057.html' }
+    ];
+
+    const IMP = { '利好':'up', '利空':'down', '中性':'flat' };
+    const CATS = ['全部','政策','央行','宏观','债市','市场','公司','区域市场','商品'];
+    const IMPS = ['全部','利好','利空','中性'];
+
+    const state = { cat:'全部', imp:'全部', q:'' };
+    const feed = document.getElementById('feed');
+    const catChips = document.getElementById('catChips');
+    const impChips = document.getElementById('impChips');
+    const statsEl = document.getElementById('stats');
+
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]; }); }
+
+    catChips.innerHTML = CATS.map(function (c) { return '<button class="chip' + (c === '全部' ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>'; }).join('');
+    impChips.innerHTML = IMPS.map(function (i) { return '<button class="chip' + (i === '全部' ? ' active' : '') + '" data-imp="' + i + '">' + i + '</button>'; }).join('');
+
+    function counts() {
+      const c = { '利好':0, '利空':0, '中性':0 };
+      NEWS.forEach(function (n) { c[n.imp]++; });
+      statsEl.innerHTML = ['利好','利空','中性'].map(function (k) {
+        return '<div class="stat ' + IMP[k] + '">' + k + '<b>' + c[k] + '</b></div>';
+      }).join('');
+      document.getElementById('total').textContent = NEWS.length;
+    }
+
+    function render() {
+      const q = state.q.trim().toLowerCase();
+      const rows = NEWS.filter(function (n) {
+        if (state.cat !== '全部' && n.cat !== state.cat) return false;
+        if (state.imp !== '全部' && n.imp !== state.imp) return false;
+        if (q && (n.title + n.sum + n.assets.join(' ') + n.src).toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      }).sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; });
+
+      if (!rows.length) { feed.innerHTML = '<div class="empty">没有符合条件的消息</div>'; return; }
+
+      feed.innerHTML = rows.map(function (n) {
+        return '<article class="item">' +
+          '<div class="side">' +
+            '<span class="imp ' + IMP[n.imp] + '">' + n.imp + '</span>' +
+            '<span class="t">' + esc(n.d.slice(5, 16).replace('-', '月').replace(' ', '日 · ').replace('月0', '月')) + '</span>' +
+            '<span class="c">' + esc(n.cat) + '</span>' +
+          '</div>' +
+          '<div class="body">' +
+            '<h3><a href="' + esc(n.url) + '" target="_blank" rel="noopener noreferrer">' + esc(n.title) + '</a></h3>' +
+            '<p>' + esc(n.sum) + '</p>' +
+            '<div class="foot">' +
+              '<span class="assets"><em>影响标的</em>' + n.assets.map(function (a) { return '<i>' + esc(a) + '</i>'; }).join('') + '</span>' +
+              '<span class="src">来源：<a href="' + esc(n.url) + '" target="_blank" rel="noopener noreferrer">' + esc(n.src) + '</a></span>' +
+            '</div>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
+    catChips.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-cat]'); if (!b) return;
+      state.cat = b.dataset.cat;
+      catChips.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('active', x === b); });
+      render();
+    });
+    impChips.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-imp]'); if (!b) return;
+      state.imp = b.dataset.imp;
+      impChips.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('active', x === b); x.classList.toggle(IMP[b.dataset.imp] || '', x === b && b.dataset.imp !== '全部'); });
+      render();
+    });
+    document.getElementById('search').addEventListener('input', function (e) { state.q = e.target.value; render(); });
+
+    counts();
+    render();
+  </script>
+</body>
+</html>

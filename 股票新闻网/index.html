@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>环球市场雷达</title>
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon-32.png" />
+  <link rel="apple-touch-icon" href="favicon-180.png" />
+  <style>
+    :root { --bg:#f4f7f8; --ink:#14222f; --muted:#71808b; --line:#dce4e8; --card:#fff; --navy:#0d2836; --teal:#0f7a75; --up:#d94f4f; --down:#14936c; --gold:#c18a30; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:1080px; font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; color:var(--ink); background:radial-gradient(circle at 7% 3%,#cfece8 0,transparent 25%),radial-gradient(circle at 94% 0,#dbe7fc 0,transparent 27%),linear-gradient(135deg,#eaf1f2,#f8fafb 48%,#e8effb); }
+    .topbar { height:66px; display:flex; align-items:center; justify-content:space-between; padding:0 42px; color:#183042; background:#ffffffa6; border-bottom:1px solid #ffffffc4; box-shadow:0 4px 20px #54748217; backdrop-filter:blur(20px) saturate(155%); -webkit-backdrop-filter:blur(20px) saturate(155%); }
+    .brand { display:flex; align-items:center; text-decoration:none; }
+    .brand-logo { display:block; width:205px; height:48px; object-fit:contain; }
+    .brand-mark { position:relative; width:26px; height:26px; border:2px solid #5ad2c8; border-radius:50%; }
+    .brand-mark::after { content:""; position:absolute; height:11px; width:2px; left:11px; top:5px; background:#f6c660; transform:rotate(38deg); transform-origin:bottom; }
+    .nav { display:flex; gap:28px; align-self:stretch; align-items:center; font-size:14px; }
+    .nav button { height:66px; display:flex; align-items:center; padding:0; border:0; background:none; color:#72838e; border-bottom:3px solid transparent; transition:.18s; }
+    .nav button:hover, .nav button.active { color:var(--navy); border-bottom-color:var(--teal); }
+    .clock { font-family:Consolas,monospace; color:#647883; font-size:13px; }
+    main { height:calc(100vh - 66px); padding:20px 42px 22px; }
+    .view { display:none; height:100%; min-height:0; flex-direction:column; }
+    .view.active { display:flex; }
+    .section-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:11px; }
+    h1,h2,p { margin:0; }
+    h1 { font-size:20px; line-height:1.1; }
+    h2 { font-size:18px; }
+    .subtitle { margin-top:5px; color:var(--muted); font-size:12px; }
+    .head-right { display:flex; align-items:center; gap:12px; color:var(--muted); font-size:12px; }
+    .status { display:flex; align-items:center; gap:6px; color:var(--teal); }
+    .dot { width:7px; height:7px; border-radius:50%; background:#30bba5; box-shadow:0 0 0 3px #30bba523; }
+    .category-picker { position:relative; }
+    .picker-button { min-width:178px; display:flex; align-items:center; justify-content:space-between; gap:24px; border:1px solid #cbd9dd; color:var(--navy); background:#fff; border-radius:6px; padding:7px 11px; font-size:13px; font-weight:700; }
+    .picker-button::after { content:'⌄'; color:var(--teal); font-size:16px; line-height:12px; }
+    .category-menu { display:none; position:absolute; right:0; top:calc(100% + 6px); z-index:5; min-width:220px; padding:6px; border:1px solid var(--line); border-radius:8px; background:#fff; box-shadow:0 10px 25px #1c354522; }
+    .category-menu.open { display:block; }
+    .category-option { width:100%; display:block; border:0; border-radius:5px; padding:9px 10px; color:#50616b; background:transparent; text-align:left; font-size:13px; }
+    .category-option:hover, .category-option.active { color:var(--teal); background:#eaf6f4; font-weight:700; }
+    button { font:inherit; cursor:pointer; }
+    .stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-bottom:13px; }
+    .stat-tile { display:flex; align-items:baseline; gap:9px; padding:11px 16px; border:1px solid #ffffffc9; background:#ffffffa1; border-radius:14px; box-shadow:0 8px 22px #33586b10; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+    .stat-tile .k { font-size:11px; color:var(--muted); white-space:nowrap; }
+    .stat-tile .v { font-family:Consolas,"Microsoft YaHei",monospace; font-size:19px; font-weight:700; line-height:1.2; white-space:nowrap; }
+    .stat-tile .v em { font-style:normal; font-size:13px; color:#c3ced3; margin:0 2px; }
+    .stat-tile .v.name { font-size:16px; }
+    .stat-tile .s { font-size:11px; color:#93a2aa; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #markets { overflow:auto; outline:none; }
+    .market-card { flex:1 1 auto; min-height:110px; max-height:420px; border:1px solid #ffffffc9; background:#ffffffa1; border-radius:16px; overflow:hidden; box-shadow:0 10px 28px #33586b12; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+    .mkt-news { flex:1 1 150px; min-height:96px; margin-top:13px; display:flex; flex-direction:column; border:1px solid #ffffffc9; background:#ffffffa1; border-radius:16px; overflow:hidden; box-shadow:0 8px 22px #33586b10; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+    .mkt-news-head { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid #e9eff1; background:#ffffffb8; }
+    .mkt-news-head h3 { margin:0; font-size:14px; }
+    .mkt-news-head h3 span { color:var(--muted); font-size:11px; font-weight:400; margin-left:7px; }
+    .mkt-news-head a { color:var(--teal); font-size:12px; font-weight:700; text-decoration:none; }
+    .mkt-news-head a:hover { text-decoration:underline; }
+    .mkt-news-list { flex:1; min-height:0; overflow:auto; display:grid; grid-template-columns:1fr 1fr; gap:0 24px; align-content:start; }
+    .mkt-news-row { display:grid; grid-template-columns:54px 1fr; gap:10px; align-items:start; padding:8px 16px; border-bottom:1px solid #f0f4f5; color:inherit; text-decoration:none; }
+    .mkt-news-row:hover { background:#f8fbfb; }
+    .table-wrap { height:100%; overflow:auto; scrollbar-width:thin; scrollbar-color:#c9d7dc transparent; }
+    #markets::-webkit-scrollbar, .table-wrap::-webkit-scrollbar, .mkt-news-list::-webkit-scrollbar { width:8px; height:8px; }
+    #markets::-webkit-scrollbar-track, .table-wrap::-webkit-scrollbar-track, .mkt-news-list::-webkit-scrollbar-track { background:transparent; }
+    #markets::-webkit-scrollbar-thumb, .table-wrap::-webkit-scrollbar-thumb, .mkt-news-list::-webkit-scrollbar-thumb { background:#c9d7dc; border-radius:5px; }
+    #markets::-webkit-scrollbar-thumb:hover, .table-wrap::-webkit-scrollbar-thumb:hover, .mkt-news-list::-webkit-scrollbar-thumb:hover { background:#a9bcc4; }
+    table { width:100%; height:100%; border-collapse:collapse; font-size:13px; }
+    thead { position:sticky; top:0; z-index:2; background:#f7fafb; }
+    thead tr { height:40px; }
+    th { padding:10px 14px; border-bottom:1px solid var(--line); color:#71808b; font-weight:500; text-align:right; white-space:nowrap; }
+    th:first-child, td:first-child { text-align:left; }
+    td { padding:8px 14px; border-bottom:1px solid #edf1f3; text-align:right; white-space:nowrap; vertical-align:middle; }
+    tr:last-child td { border-bottom:0; }
+    tr.data-row:hover td { background:#f8fbfb; }
+    .asset { font-weight:700; }
+    .asset a { color:inherit; text-decoration:none; border-bottom:1px dashed #b9cdd2; transition:.15s; }
+    .asset a:hover { color:var(--teal); border-bottom:1px solid var(--teal); }
+    .code { margin-left:7px; font-family:Consolas,monospace; font-weight:400; color:#80909a; font-size:11px; }
+    .value { font-family:Consolas,"Microsoft YaHei",monospace; }
+    .mag { display:block; width:56px; height:3px; margin:6px 0 0 auto; border-radius:2px; background:#eef2f4; overflow:hidden; }
+    .mag i { display:block; height:100%; border-radius:2px; background:#b9c6cc; }
+    .up .mag i { background:var(--up); } .down .mag i { background:var(--down); }
+    .up { color:var(--up); font-weight:700; } .down { color:var(--down); font-weight:700; } .flat { color:#6e7c85; }
+    .news-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; }
+    .source-filters { display:flex; gap:8px; }
+    .source { padding:6px 12px; border:0; background:transparent; color:#64747e; font-size:13px; border-radius:5px; }
+    .source.active { color:var(--navy); background:#dcefed; font-weight:700; }
+    .read-all { color:var(--teal); background:none; border:0; font-size:13px; }
+    .news-grid { flex:0 0 auto; height:316px; min-height:0; display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:13px; }
+    .feature, .news-list { min-height:0; background:#ffffff9b; border:1px solid #ffffffc9; border-radius:16px; overflow:hidden; box-shadow:0 8px 22px #33586b10; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+    .feature { padding:17px 19px; position:relative; background:linear-gradient(140deg,#ffffffc4 45%,#dff2efb8); }
+    .tag { display:inline-block; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:700; color:#0b6964; background:#d9efec; }
+    .feature h3 { max-width:78%; margin:12px 0 8px; font-size:18px; line-height:1.45; letter-spacing:.1px; }
+    .feature p { max-width:77%; font-size:13px; line-height:1.65; color:#60717b; }
+    .feature-meta { position:absolute; bottom:16px; left:19px; color:#83919a; font-size:11px; }
+    .mini-chart { position:absolute; width:112px; height:88px; right:15px; bottom:18px; opacity:.94; }
+    .news-list { display:flex; flex-direction:column; }
+    .news-item { flex:1; padding:12px 14px; border-bottom:1px solid #e9eff1; }
+    .news-item:last-child { border-bottom:0; }
+    .news-item:hover { background:#f8fbfb; }
+    .news-item h4 { font-size:13px; line-height:1.45; margin:0 0 7px; font-weight:700; }
+    .meta { font-size:11px; color:#8a98a0; display:flex; gap:8px; }
+    .action-button { border:1px solid #ffffffc8; padding:7px 12px; border-radius:7px; color:#fff; background:linear-gradient(135deg,#167f78,#0b5f68); box-shadow:0 6px 13px #08716a2e; font-size:12px; font-weight:700; }
+    .news-card { position:relative; display:flex; flex-direction:column; min-height:0; overflow:hidden; cursor:pointer; color:inherit; text-decoration:none; border:1px solid #ffffffd0; background:#ffffffa8; border-radius:16px; box-shadow:0 8px 22px #33586b10; transition:transform .2s,box-shadow .2s; backdrop-filter:blur(16px); }
+    .news-card:hover { transform:translateY(-3px); box-shadow:0 15px 28px #33586b20; }
+    .news-image { width:100%; height:57%; min-height:100px; max-height:340px; object-fit:cover; }
+    .news-card-content { flex:1; display:flex; flex-direction:column; padding:11px 13px; }
+    .news-card h3 { margin:6px 0 7px; font-size:14px; line-height:1.45; }
+    .news-card .meta { margin-top:auto; }
+    .latest { flex:1; min-height:0; margin-top:13px; display:flex; flex-direction:column; border:1px solid #ffffffc9; background:#ffffff9b; border-radius:16px; overflow:hidden; box-shadow:0 8px 22px #33586b10; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+    .latest-head { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid #e9eff1; background:#ffffffb8; }
+    .latest-head h3 { margin:0; font-size:14px; }
+    .latest-head h3 span { color:var(--muted); font-size:11px; font-weight:400; margin-left:7px; }
+    .latest-link { color:var(--teal); font-size:12px; font-weight:700; text-decoration:none; }
+    .latest-link:hover { text-decoration:underline; }
+    .latest-list { flex:1; min-height:0; overflow:auto; }
+    .latest-row { display:grid; grid-template-columns:60px 1fr; gap:12px; align-items:start; padding:9px 16px; border-bottom:1px solid #eef2f4; color:inherit; text-decoration:none; }
+    .latest-row:last-child { border-bottom:0; }
+    .latest-row:hover { background:#f8fbfb; }
+    .li-meta { display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+    .li-imp { font-size:10px; font-weight:700; color:#fff; padding:2px 7px; border-radius:4px; }
+    .li-imp.up { background:var(--up); } .li-imp.down { background:var(--down); } .li-imp.flat { background:#8a98a0; }
+    .li-t { font-size:11px; color:#93a2aa; font-family:Consolas,monospace; }
+    .li-title { display:block; font-size:13px; line-height:1.5; font-weight:700; margin-bottom:3px; color:var(--navy); }
+    .li-sub { display:block; font-size:11px; color:#93a2aa; }
+    .article-modal { display:none; position:fixed; z-index:20; inset:0; padding:4vh 13vw; background:#14334152; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .article-modal.open { display:block; }
+    .article-panel { position:relative; height:92vh; overflow:auto; border:1px solid #ffffffdc; border-radius:22px; background:#f9fcfceb; box-shadow:0 24px 60px #0e283c52; }
+    .close-modal { position:sticky; z-index:3; top:16px; float:right; margin:15px; width:36px; height:36px; border:0; border-radius:50%; color:#334851; background:#ffffffd4; font-size:22px; box-shadow:0 3px 12px #274c5a1f; }
+    .article-hero { width:100%; height:270px; object-fit:cover; margin-top:-51px; display:block; filter:saturate(.9); }
+    .article-content { max-width:760px; padding:26px 48px 40px; margin:auto; }
+    .article-content h2 { font-size:29px; line-height:1.38; margin:12px 0 11px; }
+    .article-lead { color:#50636d; line-height:1.75; font-size:16px; }
+    .article-content p { color:#425660; font-size:15px; line-height:1.9; margin:16px 0; }
+    .source-note { padding:11px 13px; border-radius:8px; color:#53707a; background:#e8f4f2; font-size:12px; line-height:1.65; }
+    .comment-box { margin-top:27px; padding-top:21px; border-top:1px solid #dce5e7; }
+    .comment-form { display:flex; gap:10px; margin:12px 0 15px; }
+    .comment-input { flex:1; padding:10px 12px; border:1px solid #cfdde0; border-radius:8px; outline:0; background:#ffffffbd; font:inherit; font-size:13px; }
+    .comment-input:focus { border-color:#5bb9ae; box-shadow:0 0 0 3px #55b8aa24; }
+    .comment { padding:11px 0; border-top:1px solid #ebf0f1; font-size:13px; color:#4d606a; }
+    .comment strong { display:block; margin-bottom:4px; color:#163742; font-size:12px; }
+    @media (max-height:700px) { main { padding-top:13px; } .topbar{height:55px}.nav button{height:55px} main{height:calc(100vh - 55px)} .feature h3{font-size:15px;margin:8px 0 4px}.feature p{font-size:12px}.news-item{padding:8px 12px}.news-item h4{font-size:12px;margin-bottom:4px} }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#markets" aria-label="环球市场雷达首页"><img class="brand-logo" src="brand-logo.svg" alt="环球市场雷达"></a>
+    <nav class="nav" role="tablist" aria-label="主导航"><button class="active" role="tab" aria-selected="true" aria-controls="markets" data-view="markets">市场概览</button><button role="tab" aria-selected="false" aria-controls="news" data-view="news">新闻中心</button></nav>
+    <div class="clock">数据为演示样例 · 收盘数据口径</div>
+  </header>
+  <main>
+    <section class="view active" id="markets" role="tabpanel" aria-label="市场概览">
+      <div class="section-head">
+        <div><h1>全球核心联动资产</h1><p class="subtitle">选择一个类别，查看该类资产的每日收盘表现与传导关注点</p></div>
+        <div class="head-right"><span class="status"><i class="dot"></i>收盘数据</span><div class="category-picker"><button class="picker-button" id="pickerButton" aria-expanded="false">宏观大类资产</button><div class="category-menu" id="categoryMenu"><button class="category-option active" data-filter="macro">宏观大类资产</button><button class="category-option" data-filter="stock">全球行业龙头</button><button class="category-option" data-filter="index">全球区域指数</button></div></div></div>
+      </div>
+      <div class="stat-row" id="statRow"></div>
+      <div class="market-card"><div class="table-wrap"><table><thead><tr><th>资产名称</th><th>收盘价</th><th>10月10日涨跌</th><th>传导关注点</th></tr></thead><tbody id="marketBody"></tbody></table></div></div>
+      <div class="mkt-news"><div class="mkt-news-head"><h3>相关消息<span id="relCount"></span></h3><a href="news.html">查看全部 <span id="relTotal"></span> 条 →</a></div><div class="mkt-news-list" id="relList"></div></div>
+    </section>
+    <section class="view" id="news" role="tabpanel" aria-label="新闻中心">
+      <div class="news-toolbar"><div><h2>市场新闻</h2><p class="subtitle">依据公开市场报道整理的原创解读 · 点击卡片进入文章与评论</p></div><div class="source-filters"><button class="source active">全部</button><button class="source">宏观</button><button class="source">公司</button><button class="source">区域市场</button><button class="action-button" id="refreshNews">↻ 更新新闻</button></div></div>
+      <div class="news-grid" id="newsGrid"></div>
+      <div class="latest"><div class="latest-head"><h3>最新消息<span id="latestCount"></span></h3><a class="latest-link" href="news.html">查看全部 <span id="latestTotal"></span> 条 →</a></div><div class="latest-list" id="latestList"></div></div>
+    </section>
+  </main>
+  <div class="article-modal" id="articleModal" aria-hidden="true"><div class="article-panel"><button class="close-modal" id="closeModal" aria-label="关闭">×</button><img class="article-hero" id="articleImage" alt="新闻配图"><article class="article-content"><span class="tag" id="articleTag"></span><h2 id="articleTitle"></h2><div class="meta" id="articleMeta"></div><p class="article-lead" id="articleLead"></p><div id="articleBody"></div><div class="source-note" id="sourceNote"></div><section class="comment-box"><h2>评论</h2><div class="comment-form"><input class="comment-input" id="commentInput" placeholder="说说你的看法…"><button class="action-button" id="postComment">发布</button></div><div id="comments"><div class="comment"><strong>市场观察者 · 刚刚</strong>收益率和油价的组合，确实值得持续跟踪。</div></div></section></article></div></div>
+  <script>
+    const groups = [
+      { key:'macro', name:'宏观大类资产', rows:[['美债10年期收益率','UST10Y','4.21%','+0.04%','全球估值锚，成长股敏感','https://so.eastmoney.com/web/s?keyword=%E7%BE%8E%E5%9B%BD10%E5%B9%B4%E6%9C%9F%E5%9B%BD%E5%80%BA%E6%94%B6%E7%9B%8A%E7%8E%87'],['美债2年期收益率','UST2Y','3.86%','-0.02%','短端利率预期，科技股敏感','https://so.eastmoney.com/web/s?keyword=%E7%BE%8E%E5%9B%BD2%E5%B9%B4%E6%9C%9F%E5%9B%BD%E5%80%BA%E6%94%B6%E7%9B%8A%E7%8E%87'],['美元指数','DXY','102.34','+0.18%','资本流动与大宗商品定价','https://wap.eastmoney.com/quote/stock/100.UDI.html'],['COMEX黄金','GC','2,914.6','+0.36%','避险与实际利率风向标','https://wap.eastmoney.com/quote/stock/101.GC00Y.html'],['WTI 原油','CL','71.28','-1.12%','通胀预期、能源板块','https://wap.eastmoney.com/quote/stock/102.CL00Y.html'],['布伦特原油','BZ','74.62','-0.95%','全球原油定价基准','https://wap.eastmoney.com/quote/stock/112.B00Y.html'],['LME伦铜','HG','9,482.0','+0.61%','全球制造业景气温度计','https://wap.eastmoney.com/quote/stock/101.HG00Y.html']] },
+      { key:'stock', name:'全球行业龙头', rows:[['英伟达','NVDA','138.50','+1.42%','AI算力与全球科技情绪','https://wap.eastmoney.com/quote/stock/105.NVDA.html'],['台积电','TSM','204.16','+0.84%','晶圆代工与半导体周期','https://wap.eastmoney.com/quote/stock/106.TSM.html'],['三星电子','005930.KS','57,400','-0.69%','存储芯片、韩国市场权重','https://so.eastmoney.com/web/s?keyword=%E4%B8%89%E6%98%9F%E7%94%B5%E5%AD%90'],['SK海力士','000660.KS','196,200','+2.08%','HBM存储周期','https://so.eastmoney.com/web/s?keyword=SK%E6%B5%B7%E5%8A%9B%E5%A3%AB'],['苹果','AAPL','238.74','-0.35%','消费电子供应链','https://wap.eastmoney.com/quote/stock/105.AAPL.html'],['沙特阿美','2222.SR','26.85','+0.19%','OPEC、原油供给','https://so.eastmoney.com/web/s?keyword=%E6%B2%99%E7%89%B9%E9%98%BF%E7%BE%8E'],['必和必拓','BHP','54.67','+0.72%','有色与铁矿石周期','https://wap.eastmoney.com/quote/stock/106.BHP.html']] },
+      { key:'index', name:'全球区域指数', rows:[['标普500','SPX','5,982.21','+0.48%','全球风险资产基准','https://wap.eastmoney.com/quote/stock/100.SPX.html'],['纳斯达克综合','IXIC','19,286.78','+0.86%','全球科技成长股','https://so.eastmoney.com/web/s?keyword=%E7%BA%B3%E6%96%AF%E8%BE%BE%E5%85%8B%E7%BB%BC%E5%90%88'],['道琼斯工业','DJI','43,870.35','-0.18%','传统工业蓝筹','https://wap.eastmoney.com/quote/stock/100.DJIA.html'],['韩国KOSPI','KOSPI','2,521.22','+0.27%','三星、海力士权重','https://wap.eastmoney.com/quote/stock/100.KS11.html'],['欧洲斯托克50','SX5E','4,965.81','+0.14%','欧元区核心大盘','https://wap.eastmoney.com/quote/stock/100.SX5E.html'],['英国富时100','FTSE','8,317.98','+0.05%','资源股权重高','https://wap.eastmoney.com/quote/stock/100.FTSE.html'],['印度Nifty50','NIFTY','23,587.50','-0.42%','新兴市场外资配置','https://so.eastmoney.com/web/s?keyword=%E5%8D%B0%E5%BA%A6Nifty50'],['巴西IBOVESPA','IBOV','125,432','+0.33%','资源型新兴市场','https://wap.eastmoney.com/quote/stock/100.BVSP.html'],['恒生指数','HSI','19,764.29','+0.76%','港股与中概窗口','https://wap.eastmoney.com/quote/stock/100.HSI.html'],['日经225','N225','38,451.46','-0.28%','日本核心大盘','https://wap.eastmoney.com/quote/stock/100.N225.html'],['上证指数','SSE','3,267.71','+0.12%','A股整体风向','https://wap.eastmoney.com/quote/stock/1.000001.html']] }
+    ];
+    const body = document.getElementById('marketBody');
+    const moveClass = value => value[0] === '+' ? 'up' : value[0] === '-' ? 'down' : 'flat';
+    function renderStats(group) {
+      const rows = group.rows, n = rows.length, num = r => parseFloat(r[3]);
+      const ups = rows.filter(r => num(r) > 0).length;
+      const downs = rows.filter(r => num(r) < 0).length;
+      const flats = n - ups - downs;
+      const avg = rows.reduce((s, r) => s + num(r), 0) / n;
+      const sorted = rows.slice().sort((a, b) => num(b) - num(a));
+      const top = sorted[0], bottom = sorted[n - 1];
+      const sign = v => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
+      const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
+      document.getElementById('statRow').innerHTML =
+        '<div class="stat-tile"><span class="k">涨跌家数</span><span class="v"><span class="up">' + ups + '</span><em>/</em><span class="down">' + downs + '</span></span><span class="s">共 ' + n + ' 项' + (flats ? ' · 持平 ' + flats : '') + '</span></div>' +
+        '<div class="stat-tile"><span class="k">平均涨跌幅</span><span class="v ' + cls(avg) + '">' + sign(avg) + '</span><span class="s">' + group.name + '</span></div>' +
+        '<div class="stat-tile"><span class="k">领涨</span><span class="v name ' + cls(num(top)) + '">' + top[0] + '</span><span class="s">' + sign(num(top)) + '</span></div>' +
+        '<div class="stat-tile"><span class="k">领跌</span><span class="v name ' + cls(num(bottom)) + '">' + bottom[0] + '</span><span class="s">' + sign(num(bottom)) + '</span></div>';
+    }
+    function draw(filter='macro') {
+      const group = groups.find(g => g.key === filter);
+      const max = Math.max.apply(null, group.rows.map(r => Math.abs(parseFloat(r[3])))) || 1;
+      body.innerHTML = group.rows.map(r => {
+        const w = Math.max(8, Math.round(Math.abs(parseFloat(r[3])) / max * 100));
+        return `<tr class="data-row"><td class="asset"><a href="${r[5]}" target="_blank" rel="noopener noreferrer" title="在东方财富查看 ${r[0]}">${r[0]}</a><span class="code">${r[1]}</span></td><td class="value">${r[2]}</td><td class="value ${moveClass(r[3])}"><span class="chg">${r[3]}</span><span class="mag"><i style="width:${w}%"></i></span></td><td>${r[4]}</td></tr>`;
+      }).join('');
+      renderStats(group);
+      renderRel(group);
+    }
+    function renderRel(group) {
+      const rel = HEAD.filter(n => n.k.indexOf(group.key) >= 0);
+      document.getElementById('relCount').textContent = '（' + group.name + ' · ' + rel.length + ' 条）';
+      document.getElementById('relTotal').textContent = TOTAL_NEWS;
+      document.getElementById('relList').innerHTML = rel.map(n => `<a class="mkt-news-row" href="${n.url}" target="_blank" rel="noopener noreferrer"><span class="li-meta"><span class="li-imp ${IMPCLASS[n.imp]}">${n.imp}</span><span class="li-t">${n.t}</span></span><span><span class="li-title">${n.title}</span><span class="li-sub">${n.sub}</span></span></a>`).join('');
+    }
+    const pickerButton = document.getElementById('pickerButton'); const categoryMenu = document.getElementById('categoryMenu');
+    pickerButton.addEventListener('click', () => { const open = categoryMenu.classList.toggle('open'); pickerButton.setAttribute('aria-expanded', open); });
+    document.querySelectorAll('.category-option').forEach(option => option.addEventListener('click', () => { document.querySelector('.category-option.active').classList.remove('active'); option.classList.add('active'); pickerButton.textContent = option.textContent; categoryMenu.classList.remove('open'); pickerButton.setAttribute('aria-expanded', 'false'); draw(option.dataset.filter); }));
+    document.addEventListener('click', event => { if (!event.target.closest('.category-picker')) { categoryMenu.classList.remove('open'); pickerButton.setAttribute('aria-expanded', 'false'); } });
+    const stories = [
+      { category:'宏观', tag:'宏观观察', time:'10月10日 · 08:30', image:'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=82', title:'美债与油价仍是全球股市的两条“压力线”', lead:'长端美债收益率维持高位、油价波动加剧，使市场重新审视企业估值与通胀路径。', body:['本周市场的核心矛盾，仍围绕长期利率与能源成本展开。长端收益率抬升会提高未来现金流的折现率，对估值较高的成长板块更为敏感；而油价变化则会通过运输、化工与消费端影响通胀预期。','对投资者而言，重点并不只是某一天的涨跌，而是观察两者是否同步上行：若收益率和油价同时走高，股市的波动通常会放大；若其中一项回落，风险偏好则可能得到缓冲。','这是一篇根据公开市场报道整理的解读，不构成投资建议。'], source:'参考公开报道：AP News 10月9日市场收盘报道，以及 Reuters 10月7日全球市场报道。' },
+      { category:'公司', tag:'科技与公司', time:'10月10日 · 07:50', image:'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=82', title:'AI交易未退场，但高利率环境正在考验科技股韧性', lead:'AI 产业链继续是市场关注焦点，不过更高的融资成本让“增长预期”与“估值”之间的平衡更受关注。', body:['大型科技公司仍在支撑风险资产情绪，AI 相关资本开支与半导体需求也是市场观察的主线。但当无风险利率处于高位时，市场会更严格地检验企业盈利能否兑现。','可将关注点拆成两层：上游关注算力、晶圆代工和存储需求；下游则关注云服务、终端产品与企业软件是否能把投入转化为收入。','在行情起伏较大时，单家公司消息可能快速外溢到整个产业链，因而更适合将公司新闻放进宏观利率背景中一起看。'], source:'参考公开报道：Reuters 10月6日全球市场报道，文中提及 AI 交易及大型科技股表现。' },
+      { category:'区域市场', tag:'区域市场', time:'10月10日 · 07:15', image:'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1200&q=82', title:'全球股市收官偏强，区域分化仍取决于能源与汇率', lead:'美股在震荡中收高，但各区域市场对利率、能源价格与本币汇率的敏感度并不相同。', body:['美国市场的收盘表现给全球风险偏好带来一定支撑，不过不同区域的驱动并不完全一致。资源权重较高的市场会更关注原油和金属价格；进口能源比重高的经济体，则更在意成本端的压力。','汇率同样是区域联动的重要一环。美元走强往往会影响新兴市场资金流动，也会改变以美元计价商品对本币投资者的成本。','因此，查看指数时建议同时对照美元指数、原油和本地核心权重股，而不是只看指数本身。'], source:'参考公开报道：AP News 10月9日美国市场收盘报道、Reuters 10月5日至7日全球市场报道。' }
+    ];
+    const newsGrid = document.getElementById('newsGrid');
+    function renderNews(category='全部') { const visible = stories.filter(s => category === '全部' || s.category === category); newsGrid.innerHTML = visible.map(s => `<a class="news-card" href="article.html?id=${stories.indexOf(s)}"><img class="news-image" src="${s.image}" alt="${s.title}"><div class="news-card-content"><span class="tag">${s.tag}</span><h3>${s.title}</h3><div class="meta"><span>${s.time}</span><span>阅读全文 →</span></div></div></a>`).join(''); }
+    const TOTAL_NEWS = 35;
+    const HEAD = [
+      { t:'10月10日 · 09:40', imp:'利好', k:['index'], title:'中共中央、国务院印发《关于发展新质生产力的意见》', sub:'A股 · 科技成长 · 新质生产力', src:'新华社', url:'https://www.gov.cn/yaowen/liebiao/202610/content_7082824.htm' },
+      { t:'10月10日 · 09:00', imp:'利好', k:['stock','index'], title:'机构研判券商前三季度业绩有望继续增长，头部券商配置价值受重视', sub:'券商 · 非银金融', src:'东方财富', url:'http://stock.eastmoney.com/news/1405,202610103891645668.html' },
+      { t:'10月10日 · 08:30', imp:'中性', k:['macro'], title:'美放松对俄柴油贸易制裁，特朗普称俄将对美供应大量柴油', sub:'原油 · 柴油 · 炼化', src:'新华社', url:'https://www.news.cn/world/20261010/3362f42150de4533ae12eac0272e85c0/c.html' },
+      { t:'10月10日 · 08:05', imp:'利好', k:['stock','index'], title:'国泰海通被险资巨头举牌，券业配置价值再受关注', sub:'券商 · 非银金融', src:'新浪财经', url:'https://finance.sina.com.cn/wm/2026-10-10/doc-iniutyzf7443710.shtml' },
+      { t:'10月10日 · 07:50', imp:'利好', k:['index'], title:'美股三大指数集体收涨，纳斯达克中国金龙指数涨超2%', sub:'纳指 · 中概股 · 港股', src:'东方财富', url:'https://stock.eastmoney.com/news/11784,202610103891632088.html' },
+      { t:'10月10日 · 07:20', imp:'利空', k:['macro'], title:'智利大型铜矿爆发罢工，全球铜供应再添变数', sub:'LME铜 · 有色金属', src:'中国能源新闻网', url:'https://www.cnenergynews.cn/article/4TYHxZhjJih' },
+      { t:'10月10日 · 06:40', imp:'利空', k:['stock'], title:'固态电池概念火热，上海洗霸公告紧急“降温”', sub:'固态电池 · 新能源', src:'证券时报', url:'https://stcn.com/article/detail/4208435.html' },
+      { t:'10月10日 · 00:30', imp:'利好', k:['macro'], title:'金价节后反弹至4193美元，A股黄金板块集体走强', sub:'COMEX黄金 · 黄金股', src:'财联社', url:'https://api3.cls.cn/share/article/2500519' },
+      { t:'10月9日 · 23:50', imp:'利空', k:['macro'], title:'美联储理事沃勒放鹰：仍需进一步加息，节奏存在“灵活性”', sub:'美债10Y · 美元 · 成长股', src:'中国金融信息网', url:'https://www.cnfin.com/hs-lb/detail/20261009/4478717_1.html' },
+      { t:'10月9日 · 10:11', imp:'利空', k:['stock'], title:'OpenAI年化营收“接近500亿美元”，大幅低于市场流传的近700亿', sub:'英伟达 · 半导体 · 云计算 · 光通信', src:'央视财经', url:'https://fund.eastmoney.com/a/202610093891009056.html' },
+      { t:'10月9日 · 09:30', imp:'利好', k:['index'], title:'证监会召开资本市场和金融形势专家座谈会，释放五大信号', sub:'A股 · 券商 · 保险', src:'中国证券报', url:'http://jnzstatic.cs.com.cn/zzb/htmlInfo/134799.html' },
+      { t:'10月9日 · 08:15', imp:'利好', k:['stock','index'], title:'韩国存储双雄“巨额回购”，Kospi单日大涨近6%', sub:'Kospi · 三星电子 · SK海力士', src:'韩联社', url:'https://en.yna.co.kr/k-biz/view/AEN20260820006152320' },
+      { t:'10月9日 · 07:40', imp:'利好', k:['stock'], title:'DRAM迎超级成长周期，传南亚科计划涨价最高达20%', sub:'DRAM · 存储 · 半导体', src:'东方财富', url:'https://finance.eastmoney.com/news/1354,202610073888845081.html' },
+      { t:'10月8日 · 22:30', imp:'利空', k:['macro'], title:'全球债市遭遇“世纪级”调整，美英法日同步承压', sub:'美债10Y · 全球股市 · 黄金', src:'国际在线', url:'https://news.cri.cn/2026-10-02/f94a6c37-4dae-619b-eb54-202dda55761d.html' }
+    ];
+    const IMPCLASS = { '利好':'up', '利空':'down', '中性':'flat' };
+    function renderLatest() {
+      document.getElementById('latestCount').textContent = '（最新 ' + HEAD.length + ' 条）';
+      document.getElementById('latestTotal').textContent = TOTAL_NEWS;
+      document.getElementById('latestList').innerHTML = HEAD.map(n => `<a class="latest-row" href="${n.url}" target="_blank" rel="noopener noreferrer"><span class="li-meta"><span class="li-imp ${IMPCLASS[n.imp]}">${n.imp}</span><span class="li-t">${n.t}</span></span><span><span class="li-title">${n.title}</span><span class="li-sub">${n.sub} · ${n.src}</span></span></a>`).join('');
+    }
+    const modal = document.getElementById('articleModal');
+    function openArticle(story) { document.getElementById('articleImage').src = story.image; document.getElementById('articleImage').alt = story.title; document.getElementById('articleTag').textContent = story.tag; document.getElementById('articleTitle').textContent = story.title; document.getElementById('articleMeta').innerHTML = `<span>${story.time}</span><span>·</span><span>环球市场雷达 · 原创解读</span>`; document.getElementById('articleLead').textContent = story.lead; document.getElementById('articleBody').innerHTML = story.body.map(p => `<p>${p}</p>`).join(''); document.getElementById('sourceNote').textContent = story.source; modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+    function closeArticle() { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+    document.getElementById('closeModal').addEventListener('click', closeArticle); modal.addEventListener('click', event => { if (event.target === modal) closeArticle(); });
+    document.querySelectorAll('.source').forEach(btn => btn.addEventListener('click', () => { document.querySelector('.source.active').classList.remove('active'); btn.classList.add('active'); renderNews(btn.textContent); }));
+    document.getElementById('refreshNews').addEventListener('click', () => { const button = document.getElementById('refreshNews'); button.textContent = '✓ 已更新'; setTimeout(() => button.textContent = '↻ 更新新闻', 1300); renderNews(document.querySelector('.source.active').textContent); });
+    document.getElementById('postComment').addEventListener('click', () => { const input = document.getElementById('commentInput'); const value = input.value.trim(); if (!value) return; const item = document.createElement('div'); item.className = 'comment'; item.innerHTML = `<strong>访客 · 刚刚</strong>${value.replace(/[<>]/g, '')}`; document.getElementById('comments').prepend(item); input.value = ''; });
+    document.getElementById('commentInput').addEventListener('keydown', event => { if(event.key === 'Enter') document.getElementById('postComment').click(); });
+    const navButtons = Array.prototype.slice.call(document.querySelectorAll('.nav [data-view]'));
+    const views = Array.prototype.slice.call(document.querySelectorAll('.view'));
+    function showView(name) {
+      if (!views.some(function (view) { return view.id === name; })) name = views[0].id;
+      navButtons.forEach(function (button) {
+        const on = button.dataset.view === name;
+        button.classList.toggle('active', on);
+        button.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      views.forEach(function (view) { view.classList.toggle('active', view.id === name); });
+      try { history.replaceState(null, '', '#' + name); } catch (error) { /* file:// */ }
+    }
+    navButtons.forEach(function (button) { button.addEventListener('click', function () { showView(button.dataset.view); }); });
+    window.addEventListener('hashchange', function () { showView((location.hash || '#markets').slice(1)); });
+    showView((location.hash || '#markets').slice(1));
+    renderNews();
+    renderLatest();
+    draw();
+  </script>
+</body>
+</html>

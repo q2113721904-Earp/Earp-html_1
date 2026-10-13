@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280" role="img" aria-label="环球市场雷达">
+  <title>环球市场雷达</title>
+  <defs>
+    <linearGradient id="ringGrad" x1="140" y1="10" x2="140" y2="270" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#47CBB2"/>
+      <stop offset="1" stop-color="#34BFA8"/>
+    </linearGradient>
+  </defs>
+  <circle cx="139.5" cy="139.5" r="108.5" fill="#F6FCF9"/>
+  <path fill="url(#ringGrad)" fill-rule="evenodd" d="M10.00 139.50A129.50 129.50 0 1 0 269.00 139.50A129.50 129.50 0 1 0 10.00 139.50ZM31.00 139.50A108.50 108.50 0 1 1 248.00 139.50A108.50 108.50 0 1 1 31.00 139.50Z"/>
+  <path fill="#DCF6EF" d="M201.70 26.30L210.00 29.70L210.00 61.30L195.80 46.30Z"/>
+  <path fill="#FCC24C" fill-rule="evenodd" d="M198.0 81.6L179.0 96.5L153.0 117.8L134.0 133.6L129.5 138.0L94.6 209.0L94.5 211.0L96.0 213.0L98.0 213.7L100.0 213.5L143.0 176.8L156.0 166.3L161.4 161.0L203.2 87.0L203.4 84.0L202.3 82.0L201.0 81.4L199.0 81.4Z M143.0 139.7L139.0 141.8L137.0 144.1L135.6 147.0L135.6 151.0L136.7 154.0L139.3 157.0L142.0 158.5L144.0 159.1L146.0 159.1L149.0 158.3L152.0 156.1L153.0 154.7L154.4 152.0L154.5 147.0L153.3 144.0L151.0 141.6L147.0 139.7L144.0 139.5Z"/>
+</svg>
